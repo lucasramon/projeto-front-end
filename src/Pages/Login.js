@@ -3,6 +3,7 @@ import { Box } from "@mui/system";
 import React, { useState } from "react";
 import LoginOutlinedIcon from '@mui/icons-material/LoginOutlined';
 import HowToRegOutlinedIcon from '@mui/icons-material/HowToRegOutlined';
+import { login, signUp } from "../Services/Auth";
 
 const Login = () => {
     const [isSignup, setIsSignup] = useState(false);
@@ -19,8 +20,11 @@ const Login = () => {
         }))
     }
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
+
+        const data = isSignup ? await signUp(input.email, input.name, input.password) : await login(input.email, input.password);
+        console.log(data)
     }
     const resetState = () => {
         setIsSignup(!isSignup)
