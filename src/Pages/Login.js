@@ -3,7 +3,8 @@ import { Box } from "@mui/system";
 import React, { useState } from "react";
 import LoginOutlinedIcon from '@mui/icons-material/LoginOutlined';
 import HowToRegOutlinedIcon from '@mui/icons-material/HowToRegOutlined';
-import { login, signUp } from "../Services/Auth";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../hooks/auth";
 
 const Login = () => {
     const [isSignup, setIsSignup] = useState(false);
@@ -12,6 +13,8 @@ const Login = () => {
         email: '',
         password: ''
     })
+    const navigate = useNavigate();
+    const { login, signUp } = useAuth();
 
     const handleChanges = (e) => {
         setInput((prevState) => ({
@@ -24,7 +27,9 @@ const Login = () => {
         e.preventDefault();
 
         const data = isSignup ? await signUp(input.email, input.name, input.password) : await login(input.email, input.password);
-        console.log(data)
+        if (data && !isSignup) {
+            navigate("/dashboard");
+        }
     }
     const resetState = () => {
         setIsSignup(!isSignup)
