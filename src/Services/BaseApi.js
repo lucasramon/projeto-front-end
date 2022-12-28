@@ -1,5 +1,6 @@
 import defatultAxios from 'axios';
 
+
 export const OmdbURL = defatultAxios.create({
     timeout: 300000,
 });
@@ -9,6 +10,7 @@ export const TstAPI = defatultAxios.create({
 });
 
 TstAPI.interceptors.request.use(
+
     async (config) => {
         const accessToken = localStorage.getItem('token');
         if (accessToken) {

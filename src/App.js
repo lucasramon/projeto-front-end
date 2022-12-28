@@ -1,7 +1,7 @@
 import './App.css';
 import Login from './Pages/Login';
 import Dashboard from './Pages/FavoritesList';
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 import { ProtectRoutes } from './hooks/protectRoutes';
 function App() {
   return (

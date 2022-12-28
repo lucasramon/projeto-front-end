@@ -16,6 +16,7 @@ export const UserProvider = ({ children }) => {
             setCookies('token', data.user.token);
             setCookies('name', data.user.name);
             setCookies('email', data.user.email);
+            localStorage.setItem('token', data.user.token)
 
             return data;
         })
@@ -37,6 +38,7 @@ export const UserProvider = ({ children }) => {
 
     const logout = () => {
         ['token', 'name', 'email'].forEach(obj => removeCookie(obj)); // remove data save in cookies
+        localStorage.removeItem('token');
         navigate('/login');
     };
 
