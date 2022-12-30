@@ -16,7 +16,7 @@ export const addMoviesToFavorites = async (selectedMovies) => {
         return responses.status;
     }),
         (e) => {
-            return e
+            return e.response.status
         })
 }
 
@@ -55,7 +55,7 @@ export const parseMoviesFromOMDB = async () => {
         return result;
     }),
         (e) => {
-            return e
+            return e.response.status
         })
 }
 

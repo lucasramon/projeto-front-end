@@ -17,12 +17,10 @@ import CloseIcon from '@mui/icons-material/Close';
 import Typography from '@mui/material/Typography';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
-import { makeStyles } from '@mui/styles';
 import Alert from '@mui/material/Alert';
 import AddMovies from './AddMovies';
 import ReviewsList from './ReviewsList';
 import { Delete } from './Delete';
-import { moviesMockData } from './mockMovies';
 import { parseMoviesFromOMDB } from '../Services/Movies';
 import CircularProgress from '@mui/material/CircularProgress';
 
@@ -38,67 +36,31 @@ const columns = [
 
 ];
 
-const useStyles = makeStyles((theme) => ({
-    root: {
-        width: '100%',
-        '& > * + *': {
-            marginTop: theme.spacing(2),
-        },
-    },
-    dialogTitle: {
-        margin: 0,
-        padding: 16,
-    },
-    tableButtons: {
-        width: 80,
-    },
-    closeButton: {
-        position: 'absolute',
-        right: 8,
-        top: 8,
-        color: theme.palette.grey[500],
-    },
-    grid: {
-        marginBottom: 10,
-    },
-    loader: {
-        marginTop: 100,
-    },
-    pagination: {
-        marginTop: 10,
-        marginBottom: 20,
-        textAlign: 'right',
-        '& .MuiFormControl-root': {
-            minWidth: 100,
-        },
-        '& nav': {
-            display: 'inline-block',
-            marginRight: 10,
-            marginTop: 12,
-        },
-        '& .MuiInputLabel-outlined.MuiInputLabel-shrink': {
-            background: 'white',
-            padding: '0 5 0 0',
-        }
-    },
-}));
-
-
-
 
 
 
 export default function Dashboard() {
 
-    const rows = moviesMockData;
     const [openModal, setOpenModal] = useState(false);
     const [openSnackbar, setOpenSnackbar] = useState(false);
     const [messageSnackbar, setMessageSnackbar] = useState("");
-    const [snackbarColor, setSnackbarColor] = useState("");
+    const [snackbarColor, setSnackbarColor] = useState("info");
     const [loading, setLoading] = useState(true);
     const [MovieData, setMovieData] = useState([]);
     const [typeEdit, setTypeEdit] = useState("");
     const [tableData, setTableData] = useState([]);
+
+
+    const fetchData = useCallback(async () => {
+        const result = await parseMoviesFromOMDB();
+        setTableData(result);
+        setLoading(false);
+    }, [])
+
+    useEffect(() => {
+        if (loading) fetchData();
+    }, [fetchData, loading]);
+
 
     const handleModalOpen = () => {
         setOpenModal(true);
@@ -110,8 +72,10 @@ export default function Dashboard() {
         setTypeEdit(type);
         handleModalOpen();
     };
-    const handleCheckReviews = (type) => {
+    const handleCheckReviews = (data, type) => {
         setTypeEdit(type);
+        setMovieData(data);
+
         handleModalOpen();
     };
     const handleDeleteMovie = (data, type) => {
@@ -138,22 +102,15 @@ export default function Dashboard() {
         setOpenSnackbar(false);
     };
 
-    const fetchData = useCallback(async () => {
-        const result = await parseMoviesFromOMDB();
-        setTableData(result);
-        setLoading(false);
-    }, [])
 
-    useEffect(() => {
-        if (loading) fetchData();
-    }, [fetchData, loading]);
 
 
     const modalComponent = () => {
         switch (typeEdit) {
             case 'addMovies': return <AddMovies modalClose={handleModalClose} setLoading={setLoading} error={handleOpenErrorAlert} success={handleOpenSuccess} />;
-            case 'checkReviews': return <ReviewsList modalClose={handleModalClose} error={handleOpenErrorAlert} success={handleOpenSuccess} />;
-            case 'deleteMovie': return <Delete modalClose={handleModalClose} setLoading={setLoading} modalData={MovieData} modalText={{ message: "Deseja mesmo deletar o", type: "filme" }} success={handleOpenSuccess} error={handleOpenErrorAlert} />;
+            case 'checkReviews': return <ReviewsList modalData={MovieData} />;
+            case 'deleteMovie': return <Delete modalClose={handleModalClose} setLoading={setLoading} modalData={MovieData} modalText={{ message: "Deseja mesmo excluir o", type: "filme" }} success={handleOpenSuccess} error={handleOpenErrorAlert} />;
+            default: break;
         }
     };
 
@@ -172,7 +129,7 @@ export default function Dashboard() {
         //     </DialogTitle>
         // );
         return (
-            <DialogTitle disableTypography  {...other}>
+            <DialogTitle   {...other}>
                 <Typography variant="h6">{children}</Typography>
                 {onClose ? (
                     <IconButton aria-label="close" onClick={onClose}>
@@ -217,7 +174,7 @@ export default function Dashboard() {
                                                         return (
                                                             <TableCell key={index} align={column.align}>
                                                                 <Tooltip title="Ver Reviews">
-                                                                    <IconButton onClick={() => handleCheckReviews('checkReviews')}>
+                                                                    <IconButton onClick={() => handleCheckReviews(row, 'checkReviews')}>
                                                                         <ReviewsIcon color="secondary" />
                                                                     </IconButton>
                                                                 </Tooltip>
