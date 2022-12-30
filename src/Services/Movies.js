@@ -31,9 +31,44 @@ export const getMoviesList = async (searchInput) => {
     })
 }
 
-export const getFavoritesMoviesList = async () => {
-    return OmdbURL.get(TstAPI.get(`${tstApiUrl}/favorites`)).then(response => {
-        const result = response.favorites.map(movie => movie.imdbID);
+export const getMovieById = async (movieId) => {
+    return OmdbURL.get(`${omdbApiUrl}/?i=${movieId}&apikey=${omdbApiKey}`).then(response => {
+        const result = (({ Title, Year, imdbID }) => ({ Title, Year, imdbID }))(response);
+        return result
+    })
+}
+
+
+export const parseMoviesFromOMDB = async () => {
+    const favoriteMovies = await getFavoritesMoviesList();
+    let apiCallList = [];
+    for (let imdbID of favoriteMovies) {
+        apiCallList.push(OmdbURL.get(`${omdbApiUrl}/?i=${imdbID}&apikey=${omdbApiKey}`))
+    }
+
+    return axios.all(apiCallList).then(axios.spread((...responses) => {
+        const response = responses.map(movie => movie.data);
+        let result = [];
+        for (let movie of response) {
+            result.push((({ Title, Year, imdbID }) => ({ Title, Year, imdbID }))(movie))
+        }
         return result;
+    }),
+        (e) => {
+            return e
+        })
+}
+
+export const deleteMovie = async (imdbID) => {
+    return TstAPI.delete(`${tstApiUrl}/favorites/${imdbID}`).then(response => {
+        return response.status;
+    })
+}
+
+const getFavoritesMoviesList = async () => {
+
+    return TstAPI.get(`${tstApiUrl}/favorites`).then(response => {
+        const favoriteMovies = response.data.favorites.map(movie => movie.imdbID);
+        return favoriteMovies
     })
 }

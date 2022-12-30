@@ -13,7 +13,7 @@ import { Button, TextField, Typography } from '@mui/material';
 import { getMoviesList, addMoviesToFavorites } from '../Services/Movies';
 
 const AddMovies = (props) => {
-    const { success, modalClose, error } = props;
+    const { success, modalClose, error, setLoading } = props;
     const [checked, setChecked] = useState([]);
     const [moviesData, setMoviesData] = useState([]);
     const [submitDisabled, setSubmitDisabled] = useState(false);
@@ -49,6 +49,7 @@ const AddMovies = (props) => {
         const selectedMovies = checked.map(movie => movie.imdbID);
         const response = await addMoviesToFavorites(selectedMovies);
         if (response === 200) {
+            setLoading(true)
             success("Filmes favoritados com sucesso.");
 
         } else {
@@ -86,11 +87,11 @@ const AddMovies = (props) => {
         </><>
                 <List sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper' }}>
                     {moviesData.map((movie) => {
-                        const labelId = `checkbox-list-label-${movie.imdbId}`;
+                        const labelId = `checkbox-list-label-${movie.imdbID}`;
 
                         return (
                             <ListItem
-                                key={movie.imdbId}
+                                key={movie.imdbID}
                                 // secondaryAction={<IconButton edge="end" aria-label="comments">
                                 //     <CommentIcon />
                                 // </IconButton>}

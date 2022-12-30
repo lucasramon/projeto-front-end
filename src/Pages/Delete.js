@@ -2,41 +2,27 @@ import React, { useState, useEffect } from 'react';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import Button from '@mui/material/Button';
-
+import { deleteMovie } from '../Services/Movies';
 
 
 
 export const Delete = (props) => {
-    const { modalData, modalText, success, modalClose } = props;
+    const { modalData, modalText, success, modalClose, setLoading } = props;
 
-    const [deleteData, setData] = useState([]);
-    const [deleteName, setDeleteName] = useState('');
-    const fetchData = () => {
-        if (modalData != null) {
-            setData(modalData);
-            if (modalText.type == "deleteMovie") setDeleteName(modalData.name);
-            if (modalText.type == "deleteReview") setDeleteName(modalData.name);
-        }
-    }
-
-
-    useEffect(() => {
-        fetchData()
-    }, [])
 
     const closeButton = () => {
         modalClose();
     }
     const handleDelete = async () => {
-        modalClose();
-        if (modalText.type == "deleteMovie") {
-            const status = 200
+        console.log(modalText)
+        if (modalText.type === "filme") {
+            const status = await deleteMovie(modalData.imdbID)
             if (status === 200) {
-                success("Loja Deletada.");
+                success("Filme excluido.");
             } else {
-                props.error("Não foi possível deletar a loja. Por favor tente novamente mais tarde.");
+                props.error("Não foi possível deletar o Filme. Por favor tente novamente mais tarde.");
             }
-            setData([]);
+            setLoading(true);
         }
         if (modalText.type == "deleteReview") {
             const status = 200
@@ -46,8 +32,9 @@ export const Delete = (props) => {
             } else {
                 props.error("Não foi possível deletar o Banner. Por favor tente novamente mais tarde.");
             }
-            setData([]);
+            setLoading(true);
         }
+        modalClose();
 
     }
 
@@ -56,7 +43,7 @@ export const Delete = (props) => {
     return (
         <>
             <DialogContent dividers>
-                {modalText.message} {modalText.type} "{deleteName}"?
+                {modalText.message} {modalText.type}: "{modalData.Title}"?
             </DialogContent>
             <DialogActions>
                 <Button autoFocus onClick={closeButton} color="primary">

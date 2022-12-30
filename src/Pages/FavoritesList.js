@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Paper from '@mui/material/Paper';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -23,6 +23,8 @@ import AddMovies from './AddMovies';
 import ReviewsList from './ReviewsList';
 import { Delete } from './Delete';
 import { moviesMockData } from './mockMovies';
+import { parseMoviesFromOMDB } from '../Services/Movies';
+import CircularProgress from '@mui/material/CircularProgress';
 
 const columns = [
     { id: 'Title', label: 'Título', minWidth: 170 },
@@ -93,9 +95,10 @@ export default function Dashboard() {
     const [openSnackbar, setOpenSnackbar] = useState(false);
     const [messageSnackbar, setMessageSnackbar] = useState("");
     const [snackbarColor, setSnackbarColor] = useState("");
-    const [loading, setLoading] = useState(false);
-    const [editCategory, setEditCategory] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [MovieData, setMovieData] = useState([]);
     const [typeEdit, setTypeEdit] = useState("");
+    const [tableData, setTableData] = useState([]);
 
     const handleModalOpen = () => {
         setOpenModal(true);
@@ -113,7 +116,7 @@ export default function Dashboard() {
     };
     const handleDeleteMovie = (data, type) => {
         setTypeEdit(type);
-        setEditCategory(data);
+        setMovieData(data);
         handleModalOpen();
     }
     const handleOpenErrorAlert = (message) => {
@@ -135,12 +138,22 @@ export default function Dashboard() {
         setOpenSnackbar(false);
     };
 
+    const fetchData = useCallback(async () => {
+        const result = await parseMoviesFromOMDB();
+        setTableData(result);
+        setLoading(false);
+    }, [])
+
+    useEffect(() => {
+        if (loading) fetchData();
+    }, [fetchData, loading]);
+
 
     const modalComponent = () => {
         switch (typeEdit) {
-            case 'addMovies': return <AddMovies modalClose={handleModalClose} error={handleOpenErrorAlert} success={handleOpenSuccess} />;
+            case 'addMovies': return <AddMovies modalClose={handleModalClose} setLoading={setLoading} error={handleOpenErrorAlert} success={handleOpenSuccess} />;
             case 'checkReviews': return <ReviewsList modalClose={handleModalClose} error={handleOpenErrorAlert} success={handleOpenSuccess} />;
-            case 'deleteMovie': return <Delete modalClose={handleModalClose} modalData={editCategory} modalText={{ message: "Deseja mesmo deletar o", type: "filme" }} success={handleOpenSuccess} error={handleOpenErrorAlert} />;
+            case 'deleteMovie': return <Delete modalClose={handleModalClose} setLoading={setLoading} modalData={MovieData} modalText={{ message: "Deseja mesmo deletar o", type: "filme" }} success={handleOpenSuccess} error={handleOpenErrorAlert} />;
         }
     };
 
@@ -174,64 +187,66 @@ export default function Dashboard() {
         <Paper sx={{ width: '100%', overflow: 'hidden' }}>
             <Button color='secondary' onClick={() => handleAddMovies('addMovies')} variant="contained">Adicionar Filme</Button>
             <TableContainer sx={{ maxHeight: 590 }}>
-                <Table stickyHeader aria-label="sticky table">
-                    <TableHead>
-                        <TableRow>
-                            {columns.map((column) => (
-                                <TableCell
-                                    key={column.id}
-                                    align={column.align}
-                                    style={{ minWidth: column.minWidth }}
-                                >
-                                    {column.label}
-                                </TableCell>
-                            ))}
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {rows
+                {
+                    loading ? <div className="loader">
+                        <CircularProgress />
+                    </div> :
+                        <Table stickyHeader aria-label="sticky table">
+                            <TableHead>
+                                <TableRow>
+                                    {columns.map((column) => (
+                                        <TableCell
+                                            key={column.id}
+                                            align={column.align}
+                                            style={{ minWidth: column.minWidth }}
+                                        >
+                                            {column.label}
+                                        </TableCell>
+                                    ))}
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {tableData
 
-                            .map((row, index) => {
-                                return (
-                                    <TableRow hover role="checkbox" tabIndex={-1} key={index}>
-                                        {columns.map((column, index) => {
-                                            const value = row[column.id];
-                                            if (column.id === 'actions') {
-                                                return (
-                                                    <TableCell key={index} align={column.align}>
-                                                        <Tooltip title="Ver Reviews">
-                                                            <IconButton onClick={() => handleCheckReviews('checkReviews')}>
-                                                                <ReviewsIcon color="secondary" />
-                                                            </IconButton>
-                                                        </Tooltip>
+                                    .map((row, index) => {
+                                        return (
+                                            <TableRow hover role="checkbox" tabIndex={-1} key={index}>
+                                                {columns.map((column, index) => {
+                                                    const value = row[column.id];
+                                                    if (column.id === 'actions') {
+                                                        return (
+                                                            <TableCell key={index} align={column.align}>
+                                                                <Tooltip title="Ver Reviews">
+                                                                    <IconButton onClick={() => handleCheckReviews('checkReviews')}>
+                                                                        <ReviewsIcon color="secondary" />
+                                                                    </IconButton>
+                                                                </Tooltip>
 
-                                                        <Tooltip title="Remover Filmes">
-                                                            <IconButton onClick={() => handleDeleteMovie(row, 'deleteMovie')}>
-                                                                <DeleteIcon color="error" />
-                                                            </IconButton>
-                                                        </Tooltip>
+                                                                <Tooltip title="Remover Filmes">
+                                                                    <IconButton onClick={() => handleDeleteMovie(row, 'deleteMovie')}>
+                                                                        <DeleteIcon color="error" />
+                                                                    </IconButton>
+                                                                </Tooltip>
 
 
-                                                    </TableCell>
-                                                )
-                                            } else {
-                                                return (
-                                                    <TableCell key={index} align={column.align}>
-                                                        {value}
-                                                    </TableCell>
-                                                );
-                                            }
-                                        })}
-                                    </TableRow>
-                                );
-                            })}
-                    </TableBody>
-                </Table>
+                                                            </TableCell>
+                                                        )
+                                                    } else {
+                                                        return (
+                                                            <TableCell key={index} align={column.align}>
+                                                                {value}
+                                                            </TableCell>
+                                                        );
+                                                    }
+                                                })}
+                                            </TableRow>
+                                        );
+                                    })}
+                            </TableBody>
+                        </Table>
+                }
             </TableContainer>
 
-            {/* {loading && categoriesList.length > 0 ? <div className="loader">
-                <h1>AAAAAAAAASASASAS</h1>
-            </div> : ''} */}
 
             <Dialog onClose={handleModalClose} aria-labelledby="customized-dialog-title" open={openModal}>
                 <SetDialogTitle id="customized-dialog-title" onClose={handleModalClose}>
