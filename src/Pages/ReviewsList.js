@@ -40,13 +40,14 @@ const ReviewsList = (props) => {
     const [reviewData, setReviewData] = useState([]);
     const [typeEdit, setTypeEdit] = useState("");
     const [listData, setListData] = useState([]);
-
+    const [myReviews, setMyReviews] = useState([])
 
     const fetchData = useCallback(async () => {
         const result = await getReviewsFromMovie(modalData.imdbID);
-        const teste = await getMyReviews();
-        console.log(teste)
+        const resultMyReviews = await getMyReviews();
+
         setListData(result);
+        setMyReviews(resultMyReviews);
         setLoading(false);
     }, [])
 
@@ -92,12 +93,10 @@ const ReviewsList = (props) => {
     };
 
 
-
-
     const modalComponent = () => {
         switch (typeEdit) {
             case 'addReview': return <AddReview modalClose={handleModalClose} modalData={modalData} setLoading={setLoading} error={handleOpenErrorAlert} success={handleOpenSuccess} />;
-            case 'deleteReview': return <Delete modalClose={handleModalClose} setLoading={setLoading} modalData={reviewData} modalText={{ message: "Deseja mesmo excluir o", type: "review" }} success={handleOpenSuccess} error={handleOpenErrorAlert} />;
+            case 'deleteReview': return <Delete modalClose={handleModalClose} setLoading={setLoading} modalData={reviewData} modalText={{ message: "Deseja mesmo excluir o seu", type: "review" }} success={handleOpenSuccess} error={handleOpenErrorAlert} />;
             default: break;
         }
     };
@@ -128,6 +127,15 @@ const ReviewsList = (props) => {
         );
     };
 
+    const checkIfMyReview = (movieReview) => {
+        const imdbID = modalData.imdbID;
+        const containsMyReviewFromMovie = (review) => (review.imdbID === imdbID && movieReview.user.name === review.user.name);
+        const result = myReviews.some(containsMyReviewFromMovie);
+        return result
+    }
+
+
+
     return (
         <Paper sx={{ width: '100%', overflow: 'hidden' }}>
             <Grid container spacing={2}>
@@ -150,12 +158,12 @@ const ReviewsList = (props) => {
                                         return (
                                             < ListItem
                                                 key={index}
-                                                secondaryAction={
+                                                secondaryAction={checkIfMyReview(review) ?
                                                     < Tooltip title="Excluir review" >
                                                         <IconButton edge="end" onClick={() => handleDeleteReview(review, 'deleteReview')} aria-label="delete">
                                                             <DeleteIcon />
                                                         </IconButton>
-                                                    </Tooltip>
+                                                    </Tooltip> : null
                                                 }
                                             >
                                                 <ListItemAvatar>
@@ -187,7 +195,7 @@ const ReviewsList = (props) => {
                 {modalComponent()}
             </Dialog>
 
-            <Snackbar open={openSnackbar} autoHideDuration={5000} onClose={handleCloseErrorAlert}>
+            <Snackbar open={openSnackbar} autoHideDuration={2000} onClose={handleCloseErrorAlert}>
                 <Alert onClose={handleCloseErrorAlert} severity={snackbarColor}>
                     {messageSnackbar}
                 </Alert>

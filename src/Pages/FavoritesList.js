@@ -212,7 +212,7 @@ export default function Dashboard() {
                 {modalComponent()}
             </Dialog>
 
-            <Snackbar open={openSnackbar} autoHideDuration={5000} onClose={handleCloseErrorAlert}>
+            <Snackbar open={openSnackbar} autoHideDuration={2000} onClose={handleCloseErrorAlert}>
                 <Alert onClose={handleCloseErrorAlert} severity={snackbarColor}>
                     {messageSnackbar}
                 </Alert>
